@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "my-chart.fullname" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "my-chart.fullname" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "my-chart.fullname" . }}
+    spec:
+      initContainers:
+      - name: init-cont 
+        image: "{{ .Values.initContainerImage.repository }}:{{ .Values.initContainerImage.tag }}"
+        command: ['sh', '-c', 'hostname -i > /ip-container/ip.txt']
+        volumeMounts:
+        - name: ip-volume
+          mountPath: /ip-container
+      containers:
+      - name: nginx
+        image: "{{ .Values.nginxImage.repository }}:{{ .Values.nginxImage.tag }}"
+        volumeMounts:
+        - name: ip-volume
+          mountPath: /usr/share/nginx/html/
+      volumes:
+      - name: ip-volume
+        emptyDir: {}
